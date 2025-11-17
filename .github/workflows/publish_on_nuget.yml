@@ -34,16 +34,10 @@ jobs:
       shell: bash
       run: dotnet build ${{ env.BUILD_FILTER }} --configuration ${{ env.BUILD_CONFIG }} --no-restore
       
-    - name: show content
-      run: find . -ls
-
     - name: NuGet Pack
       shell: bash
       run: dotnet pack ${{ env.BUILD_FILTER }} --configuration ${{ env.BUILD_CONFIG }} --no-restore -o ${{ env.PACKAGES_DIR }}
       
-    - name: show content
-      run: find . -ls
-
     - name: Upload packages as artifact
       uses: actions/upload-artifact@v4
       with:
@@ -54,10 +48,10 @@ jobs:
   publish_nuget:
     needs: build
     runs-on: ubuntu-latest
-#    environment: production
-#
-#    permissions:
-#      id-token: write
+    environment: production
+
+    permissions:
+      id-token: write
 
     steps:
 
@@ -67,14 +61,11 @@ jobs:
         name: ${{ env.ARTIFACT_NAME }}
         path: ./
         
-    - name: show content
-      run: find . -ls
+    - name: NuGet login
+      uses: NuGet/login@v1
+      id: login
+      with:
+        user: ${{ secrets.NUGET_USER }}
 
-#    - name: NuGet login
-#      uses: NuGet/login@v1
-#      id: login
-#      with:
-#        user: ${{ secrets.NUGET_USER }}
-#
-#    - name: NuGet push
-#      run: dotnet nuget push ./${{ env.ARTIFACT_NAME }}/*.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
+    - name: NuGet push
+      run: dotnet nuget push ./*.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
