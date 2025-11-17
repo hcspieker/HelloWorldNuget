@@ -11,6 +11,8 @@ on:
 env:
   BUILD_FILTER: 'HelloWorldNuget/HelloWorldNuget.slnx'
   BUILD_CONFIG: 'Release'
+  PACKAGES_DIR: 'NuGetPackages'
+  ARTIFACT_NAME: 'CreatedPackages'
 
 jobs:
   build:    
@@ -31,3 +33,14 @@ jobs:
     - name: Build
       shell: bash
       run: dotnet build ${{ env.BUILD_FILTER }} --configuration ${{ env.BUILD_CONFIG }} --no-restore
+
+    - name: NuGet Pack
+      shell: bash
+      run: dotnet pack ${{ env.BUILD_FILTER }} --configuration ${{ env.BUILD_CONFIG }} --no-restore -o ${{ env.PACKAGES_DIR }}
+      
+    - name: Upload packages as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.ARTIFACT_NAME }}
+        path: .${{ env.PACKAGES_DIR }}
+        retention-days: 7
