@@ -9,9 +9,8 @@ on:
   workflow_dispatch:
 
 env:
-  BUILD_FILTER: 'HelloWorldNuget/HelloWorldNuget.sln'
+  BUILD_FILTER: 'HelloWorldNuget/HelloWorldNuget.slnx'
   BUILD_CONFIG: 'Release'
-  ENABLE_TESTS: 'false'
 
 jobs:
   build:    
