@@ -1,12 +1,9 @@
 name: Publish new package version on NuGet
 
 on:
-#  push:
-#    branches: [ "main" ]
-#    paths:
-#      - ".github/workflows/publish_on_nuget.yml"
-#      - "HelloWorldNuget/**"
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'
 
 env:
   BUILD_FILTER: 'HelloWorldNuget/HelloWorldNuget.slnx'
@@ -20,6 +17,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Extract version from tag
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        TAG=${GITHUB_REF#refs/tags/}
+        VERSION=${TAG#v}
+        echo "TAG=$TAG" >> $GITHUB_ENV
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "Extracted TAG: $TAG"
+        echo "Extracted VERSION: $VERSION"
         
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
@@ -32,11 +39,11 @@ jobs:
 
     - name: Build
       shell: bash
-      run: dotnet build ${{ env.BUILD_FILTER }} --configuration ${{ env.BUILD_CONFIG }} --no-restore
+      run: dotnet build ${{ env.BUILD_FILTER }} --configuration ${{ env.BUILD_CONFIG }} --no-restore /p:Version=${{ env.VERSION }} /p:FileVersion=${{ env.VERSION }} /p:InformationalVersion=${{ env.VERSION }}+sha.${GITHUB_SHA:0:7}
       
     - name: NuGet Pack
       shell: bash
-      run: dotnet pack ${{ env.BUILD_FILTER }} --configuration ${{ env.BUILD_CONFIG }} --no-restore -o ${{ env.PACKAGES_DIR }}
+      run: dotnet pack ${{ env.BUILD_FILTER }} --configuration ${{ env.BUILD_CONFIG }} --no-restore -o ${{ env.PACKAGES_DIR }} /p:PackageVersion=${{ env.VERSION }} /p:Version=${{ env.VERSION }} /p:FileVersion=${{ env.VERSION }} /p:InformationalVersion=${{ env.VERSION }}+sha.${GITHUB_SHA:0:7}
       
     - name: Upload packages as artifact
       uses: actions/upload-artifact@v4
